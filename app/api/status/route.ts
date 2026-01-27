@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+
 /* ⭐ บังคับไม่ให้ cache */
 export const dynamic = "force-dynamic";
 
