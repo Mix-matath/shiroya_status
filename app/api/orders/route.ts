@@ -1,27 +1,31 @@
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-/* ===============================
-   GET : ดึงรายการงานทั้งหมด
-   =============================== */
+/* =====================================================
+   GET : ดึงรายการ Order ทั้งหมด
+   ===================================================== */
 export async function GET() {
   try {
-    /* 🔐 SERVER GUARD */
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [rows] = await db.query(
-      "SELECT id, customer_id, status FROM orders ORDER BY id DESC"
-    );
+    const orders = await prisma.order.findMany({
+      select: {
+        id: true,
+        customerId: true,
+        status: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-    return NextResponse.json(rows);
+    return NextResponse.json(orders);
   } catch (error) {
     console.error("GET /api/orders error:", error);
     return NextResponse.json(
@@ -31,92 +35,16 @@ export async function GET() {
   }
 }
 
-/* ===============================
-   PUT : อัปเดตสถานะ + Audit Log
-   =============================== */
-export async function PUT(req: Request) {
+/* =====================================================
+   POST : สร้าง Order ใหม่
+   ===================================================== */
+export async function POST(req: Request) {
   try {
-    /* 🔐 SERVER GUARD */
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const {
-      id,
-      status,
-      adminId,
-      adminUsername,
-    } = await req.json();
-
-    /* 🔴 ตรวจข้อมูล */
-    if (!id || !status) {
-      return NextResponse.json(
-        { error: "ข้อมูลไม่ครบ" },
-        { status: 400 }
-      );
-    }
-
-    /* 1️⃣ ดึงสถานะเก่า */
-    const [oldRows]: any = await db.query(
-      "SELECT status FROM orders WHERE id = ?",
-      [id]
-    );
-
-    if (oldRows.length === 0) {
-      return NextResponse.json(
-        { error: "ไม่พบ Order" },
-        { status: 404 }
-      );
-    }
-
-    const oldStatus = oldRows[0].status;
-
-    /* 2️⃣ อัปเดตสถานะใหม่ */
-    const [result]: any = await db.query(
-      "UPDATE orders SET status = ? WHERE id = ?",
-      [status, id]
-    );
-
-    /* 3️⃣ บันทึก Audit Log (ถ้ามี admin) */
-    if (adminId && adminUsername) {
-      await db.query(
-        `
-        INSERT INTO order_status_logs
-        (order_id, old_status, new_status, admin_id, admin_username)
-        VALUES (?, ?, ?, ?, ?)
-        `,
-        [id, oldStatus, status, adminId, adminUsername]
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      affectedRows: result.affectedRows,
-    });
-  } catch (error) {
-    console.error("PUT /api/orders error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
-  try {
     const { customer_id } = await req.json();
 
     if (!customer_id) {
@@ -126,17 +54,70 @@ export async function POST(req: Request) {
       );
     }
 
-    await db.query(
-      `
-      INSERT INTO orders (customer_id, status)
-      VALUES (?, ?)
-      `,
-      [customer_id, "เราได้รับเสื้อผ้าของคุณแล้ว"]
+    const order = await prisma.order.create({
+      data: {
+        customerId: customer_id,
+        status: "เราได้รับเสื้อผ้าของคุณแล้ว",
+      },
+    });
+
+    return NextResponse.json({ success: true, order });
+  } catch (error) {
+    console.error("POST /api/orders error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
+  }
+}
+
+/* =====================================================
+   PUT : อัปเดตสถานะ Order + บันทึก OrderStatusLog
+   ===================================================== */
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id, status } = await req.json();
+
+    if (!id || !status) {
+      return NextResponse.json({ error: "ข้อมูลไม่ครบ" }, { status: 400 });
+    }
+
+    /* 1️⃣ ดึง Order เดิม */
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!order) {
+      return NextResponse.json({ error: "ไม่พบ Order" }, { status: 404 });
+    }
+
+    const oldStatus = order.status;
+
+    /* 2️⃣ อัปเดตสถานะใหม่ */
+    await prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+
+    /* 3️⃣ บันทึก OrderStatusLog */
+    await prisma.orderStatusLog.create({
+      data: {
+        orderId: id,
+        oldStatus,
+        newStatus: status,
+        adminId: session.user.id,
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("POST /api/orders error:", error);
+    console.error("PUT /api/orders error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

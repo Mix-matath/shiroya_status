@@ -1,19 +1,27 @@
+// app/api/admin/log/route.ts
+
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
-  if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+
+  // 🔐 server guard (เหมือนเดิม)
+  if (!session || !session.user?.id) {
+    return new NextResponse("Unauthorized", { status: 401 });
   }
 
   const body = await req.json();
 
-  await db.query(
-    "INSERT INTO admin_logs (admin_id, action) VALUES (?, ?)",
-    [session.user.id, body.action]
-  );
+  // ✅ INSERT log (Prisma / PostgreSQL)
+  await prisma.adminLog.create({
+    data: {
+      adminId: session.user.id,
+      action: body.action,
+    },
+  });
 
-  return Response.json({ success: true });
+  return NextResponse.json({ success: true });
 }

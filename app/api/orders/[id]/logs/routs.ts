@@ -1,23 +1,38 @@
-import { db } from "@/lib/db";
+// app/api/orders/[id]/logs/route.ts
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _: Request,
   { params }: { params: { id: string } }
 ) {
-  const [rows] = await db.query(
-    `
-    SELECT 
-      old_status,
-      new_status,
-      admin_username,
-      created_at
-    FROM order_status_logs
-    WHERE order_id = ?
-    ORDER BY created_at DESC
-    `,
-    [params.id]
-  );
+  try {
+    const logs = await prisma.orderStatusLog.findMany({
+      where: {
+        orderId: params.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        oldStatus: true,
+        newStatus: true,
+        createdAt: true,
+        admin: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
 
-  return NextResponse.json(rows);
+    return NextResponse.json(logs);
+  } catch (error) {
+    console.error("GET order status logs error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }

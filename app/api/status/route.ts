@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 /* ⭐ บังคับไม่ให้ cache */
 export const dynamic = "force-dynamic";
 
+/* =====================================
+   POST : ลูกค้าตรวจสอบสถานะงาน
+   ===================================== */
 export async function POST(req: Request) {
   try {
     const { customerId } = await req.json();
@@ -15,12 +18,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const [rows]: any = await db.query(
-      "SELECT status FROM orders WHERE customer_id = ?",
-      [customerId.trim()]
-    );
+    const order = await prisma.order.findUnique({
+      where: {
+        customerId: customerId.trim(),
+      },
+      select: {
+        customerId: true,
+        status: true,
+      },
+    });
 
-    if (rows.length === 0) {
+    if (!order) {
       return NextResponse.json(
         { error: "ไม่พบ Customer ID นี้" },
         { status: 404 }
@@ -28,8 +36,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      customerId,
-      status: rows[0].status,
+      customerId: order.customerId,
+      status: order.status,
     });
   } catch (error) {
     console.error("POST /api/status error:", error);

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-/* ===============================
-   POST : สร้าง Admin ใหม่
-   =============================== */
 export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
@@ -16,27 +13,29 @@ export async function POST(req: Request) {
       );
     }
 
-    /* 1️⃣ ตรวจว่าซ้ำไหม */
-    const [exists]: any = await db.query(
-      "SELECT id FROM admins WHERE username = ?",
-      [username]
-    );
+    /* ตรวจ username ซ้ำ */
+    const exists = await prisma.user.findUnique({
+      where: { username },
+    });
 
-    if (exists.length > 0) {
+    if (exists) {
       return NextResponse.json(
         { error: "Username นี้ถูกใช้แล้ว" },
         { status: 409 }
       );
     }
 
-    /* 2️⃣ hash password */
+    /* hash password */
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    /* 3️⃣ insert */
-    await db.query(
-      "INSERT INTO admins (username, password) VALUES (?, ?)",
-      [username, hashedPassword]
-    );
+    /* สร้าง admin */
+    await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        role: "ADMIN", // ไม่ใส่ก็ได้ (มี default)
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// =======================
+// Prisma Generator
+// =======================
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =======================
+// Datasource (Prisma 7)
+// URL จะไปอยู่ใน prisma.config.ts
+// =======================
+datasource db {
+  provider = "postgresql"
+}
+
+// =======================
+// USER (ADMIN / STAFF)
+// ใช้กับ NextAuth
+// =======================
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+
+  role String @default("ADMIN") // 🔑 แยกสิทธิภายหลังได้
+
+  sessions  Session[]
+  adminLogs AdminLog[]
+  orderLogs     OrderStatusLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =======================
+// NEXTAUTH SESSION
+// =======================
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// =======================
+// NEXTAUTH TOKEN
+// (ยังต้องมี แม้ใช้ Credentials)
+// =======================
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// =======================
+// CUSTOMER ORDER / JOB
+// =======================
+model Order {
+  id           String  @id @default(cuid())
+  customerId   String  @unique // ลูกค้าใช้ติดตามงาน
+  customerName String?
+  status       String
+  note         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  createdAt DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+
+model OrderStatusLog {
+  id          String   @id @default(cuid())
+
+  orderId     String
+  oldStatus   String
+  newStatus   String
+
+  adminId     String
+  admin       User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+}
