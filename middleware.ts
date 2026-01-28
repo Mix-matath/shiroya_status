@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // ถ้าผ่านการตรวจ auth มาแล้ว ให้ไปต่อได้เลย
+    // ให้ผ่านไปได้เลยถ้าเงื่อนไขผ่าน authorized ด้านล่างแล้ว
     return NextResponse.next();
   },
   {
@@ -12,8 +12,8 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
 
-        // ✅ เงื่อนไขสำคัญ: ถ้าเป็นหน้า Login ให้ "ผ่านได้เลย" ไม่ต้องเช็ค Token
-        // เพื่อป้องกันการ Redirect Loop
+        // ✅ เงื่อนไขสำคัญ: ถ้าเป็นหน้า Login ให้ "ผ่านได้เลย" (return true) 
+        // ไม่ต้องเช็ค Token เพื่อป้องกันการ Redirect Loop
         if (pathname === "/admin/login") {
           return true;
         }
@@ -23,13 +23,12 @@ export default withAuth(
       },
     },
     pages: {
-      signIn: "/admin/login", // บอก NextAuth ว่าหน้า Login อยู่ที่นี่
+      signIn: "/admin/login",
     },
   }
 );
 
 export const config = {
-  // Matcher นี้จะดักทุกอย่างใน /admin
-  // แต่เราจัดการข้อยกเว้นไว้ใน callbacks.authorized ด้านบนแล้ว
+  // ดักจับทุก path ใน /admin
   matcher: ["/admin/:path*"],
 };
