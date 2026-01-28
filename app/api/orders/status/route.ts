@@ -1,4 +1,4 @@
-// app/api/.../route.ts
+/*/ app/api/.../route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -31,4 +31,4 @@ export async function PUT(req: Request) {
       { status: 500 }
     );
   }
-}
+}*/

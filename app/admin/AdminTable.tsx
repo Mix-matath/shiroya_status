@@ -58,14 +58,14 @@ export default function AdminTable({ refreshKey }: Props) {
      update status
      =============================== */
   const updateStatus = async (id: number, status: string) => {
-    const res = await fetch("/api/orders", {
-      method: "PUT",
+    // ✅ แก้ URL ให้ยิงไปที่ /api/orders/[id]
+    // ✅ เปลี่ยน Method เป็น PATCH ให้ตรงกับ API
+    const res = await fetch(`/api/orders/${id}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id,
-        status,
-        adminId: session?.user?.id,
-        adminUsername: session?.user?.username,
+        status, 
+        // ไม่ต้องส่ง id, adminId ใน body แล้ว เพราะเราเช็คจาก session และ url ได้
       }),
     });
 
@@ -81,9 +81,9 @@ export default function AdminTable({ refreshKey }: Props) {
       return;
     }
 
+    // โหลดข้อมูลใหม่เพื่อแสดงผลล่าสุด
     fetchOrders();
   };
-
   /* ===============================
      UI
      =============================== */
