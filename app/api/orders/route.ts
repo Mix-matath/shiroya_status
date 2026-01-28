@@ -17,6 +17,7 @@ export async function GET() {
       select: {
         id: true,
         customerId: true,
+        customerName: true, // ✅ ดึงชื่อลูกค้ามาแสดงด้วย
         status: true,
         createdAt: true,
       },
@@ -45,9 +46,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { customer_id } = await req.json();
+    // ✅ 1. เปลี่ยนจาก customer_id เป็น customerId และรับ customerName มาด้วย
+    const { customerId, customerName } = await req.json();
 
-    if (!customer_id) {
+    if (!customerId) {
       return NextResponse.json(
         { error: "customer_id is required" },
         { status: 400 }
@@ -56,8 +58,9 @@ export async function POST(req: Request) {
 
     const order = await prisma.order.create({
       data: {
-        customerId: customer_id,
-        status: "เราได้รับเสื้อผ้าของคุณแล้ว",
+        customerId: customerId,     // ✅ ใช้ตัวแปร customerId
+        customerName: customerName, // ✅ บันทึกชื่อลูกค้า
+        status: "Pending",          // ✅ แนะนำให้ใช้ "Pending" เพื่อให้ตรงกับ Logic ใน AdminTable และ TrackPage
       },
     });
 
@@ -72,7 +75,7 @@ export async function POST(req: Request) {
 }
 
 /* =====================================================
-   PUT : อัปเดตสถานะ Order + บันทึก OrderStatusLog
+   PUT : อัปเดตสถานะ Order
    ===================================================== */
 export async function PUT(req: Request) {
   try {
@@ -87,7 +90,6 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "ข้อมูลไม่ครบ" }, { status: 400 });
     }
 
-    /* 1️⃣ ดึง Order เดิม */
     const order = await prisma.order.findUnique({
       where: { id },
       select: { status: true },
@@ -99,13 +101,11 @@ export async function PUT(req: Request) {
 
     const oldStatus = order.status;
 
-    /* 2️⃣ อัปเดตสถานะใหม่ */
     await prisma.order.update({
       where: { id },
       data: { status },
     });
 
-    /* 3️⃣ บันทึก OrderStatusLog */
     await prisma.orderStatusLog.create({
       data: {
         orderId: id,
