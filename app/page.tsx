@@ -29,7 +29,7 @@ export default function HomePage() {
       });
 
       if (!res.ok) {
-        setError("ไม่พบข้อมูลลูกค้า หรือ รหัสไม่ถูกต้อง");
+        setError("The slip number was not found or this slip number is incorrect.");
         return;
       }
 
@@ -55,7 +55,7 @@ export default function HomePage() {
             Check Status
           </h1>
           <p className="text-slate-500 text-sm">
-            กรอกรหัสลูกค้าเพื่อตรวจสอบสถานะพัสดุ
+            Enter your slip number to check the Laundry status
           </p>
         </div>
 
@@ -76,10 +76,10 @@ export default function HomePage() {
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-4 rounded-xl font-semibold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
           >
             {loading ? (
-              <span className="animate-pulse">กำลังตรวจสอบ...</span>
+              <span className="animate-pulse">Checking...</span>
             ) : (
               <>
-                <span>ตรวจสอบสถานะ</span>
+                <span>Check</span>
               </>
             )}
           </button>
