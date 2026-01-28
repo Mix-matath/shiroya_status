@@ -1,3 +1,4 @@
+// app/track/[customerId]/page.tsx
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -5,11 +6,13 @@ export const dynamic = "force-dynamic";
 export default async function TrackPage({
   params,
 }: {
-  params: { customerId: string };
+  params: Promise<{ customerId: string }>; // ✅ แก้ Type เป็น Promise
 }) {
+  const { customerId } = await params; // ✅ ต้อง await ก่อนใช้งาน
+
   const order = await prisma.order.findUnique({
     where: {
-      customerId: params.customerId,
+      customerId: customerId, // ใช้ตัวแปรที่ await มาแล้ว
     },
     select: {
       status: true,

@@ -3,13 +3,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  _: Request,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> } // ✅ แก้ Type เป็น Promise
 ) {
   try {
+    const { id } = await params; // ✅ ต้อง await ก่อนใช้งาน
+
     const logs = await prisma.orderStatusLog.findMany({
       where: {
-        orderId: params.id,
+        orderId: id, // ใช้ id ที่ await มาแล้ว
       },
       orderBy: {
         createdAt: "desc",
