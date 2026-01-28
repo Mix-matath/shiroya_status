@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> } // ✅ 1. แก้ Type เป็น Promise
+  { params }: { params: Promise<{ id: string }> } // ✅ แก้ Type เป็น Promise
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -13,12 +13,12 @@ export async function PATCH(
   }
 
   try {
-    const { id } = await params; // ✅ 2. ต้อง await params ก่อนใช้งาน
+    const { id } = await params; // ✅ await ก่อนใช้งาน
     const body = await request.json();
     const { status } = body;
 
     const updatedOrder = await prisma.order.update({
-      where: { id: id }, 
+      where: { id: id },
       data: { status: status },
     });
 
