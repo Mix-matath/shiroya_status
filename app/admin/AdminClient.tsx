@@ -4,7 +4,12 @@ import { useState } from "react";
 import AddOrderForm from "./AddOrderForm";
 import AdminTable from "./AdminTable";
 
-export default function AdminClient() {
+// ✅ เพิ่ม Interface สำหรับ Props
+interface AdminClientProps {
+  initialOrders?: any[]; // รับค่าไว้ก่อน (ใช้ any หรือ Type ของ Order ถ้ามี)
+}
+
+export default function AdminClient({ initialOrders }: AdminClientProps) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   return (
@@ -23,6 +28,7 @@ export default function AdminClient() {
       </div>
 
       {/* ===== TABLE ===== */}
+      {/* ถ้า AdminTable รองรับ initialData ก็ส่งต่อได้เลย แต่ถ้ายึดตามเดิมก็ปล่อยไว้ */}
       <AdminTable refreshKey={refreshKey} />
     </div>
   );
