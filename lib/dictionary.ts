@@ -1,8 +1,6 @@
-// lib/dictionary.ts
-
 export const dictionary = {
   th: {
-    // --- ส่วนหน้าแรก (Home) ---
+    // --- หน้าแรก ---
     title: "ตรวจสอบสถานะ",
     subtitle: "กรอกรหัสลูกค้าเพื่อตรวจสอบสถานะเสื้อผ้า",
     placeholder: "เลขใบเสร็จ (Slip No.)",
@@ -15,7 +13,7 @@ export const dictionary = {
     footer: "© Shiroya Laundry Service",
     lang_switch: "Switch to English 🇬🇧",
 
-    // --- ส่วนสถานะ (Status) ---
+    // --- สถานะ ---
     status_pending: "รอรับผ้า",
     status_processing: "กำลังซัก",
     status_ironing: "กำลังรีด",
@@ -23,7 +21,7 @@ export const dictionary = {
     status_completed: "เสร็จสิ้น",
     status_cancelled: "ยกเลิก",
 
-    // --- ส่วนหน้าผลลัพธ์ (Tracking Result) ---
+    // --- ผลลัพธ์ ---
     label_customer: "ลูกค้า",
     label_order_id: "Order ID",
     label_progress: "ความคืบหน้า",
@@ -31,7 +29,7 @@ export const dictionary = {
     label_back: "กลับหน้าหลัก",
     help_text: "หากมีข้อสงสัย โปรดติดต่อพนักงานที่หน้าร้าน",
 
-    // --- ส่วนหน้า Admin ---
+    // --- Admin: ตาราง ---
     admin_active_title: "งานที่กำลังดำเนินการ",
     admin_history_title: "ประวัติงานที่เสร็จสิ้น",
     admin_header_id: "รหัสลูกค้า",
@@ -44,9 +42,20 @@ export const dictionary = {
     admin_delete_success: "ลบเรียบร้อย",
     admin_delete_error: "ลบไม่สำเร็จ",
     admin_empty: "ไม่พบรายการ",
+    
+    // ✅ เพิ่มใหม่: Admin ฟอร์มเพิ่มออเดอร์
+    admin_dashboard_title: "แดชบอร์ดผู้ดูแลระบบ",
+    admin_add_title: "เพิ่มออเดอร์ใหม่",
+    admin_add_placeholder_id: "รหัสลูกค้า (เช่น 001)",
+    admin_add_placeholder_name: "ชื่อลูกค้า (ไม่บังคับ)",
+    admin_btn_add: "เพิ่มออเดอร์",
+    admin_btn_adding: "กำลังเพิ่ม...",
+    admin_add_success: "เพิ่มออเดอร์สำเร็จ!",
+    admin_add_error: "เพิ่มไม่สำเร็จ (รหัสอาจซ้ำ)",
+    admin_logout: "ออกจากระบบ"
   },
   en: {
-    // --- Home Section ---
+    // --- Home ---
     title: "Check Status",
     subtitle: "Enter customer ID to track your order",
     placeholder: "Customer ID (e.g. ORDER-123)",
@@ -59,7 +68,7 @@ export const dictionary = {
     footer: "© Shiroya Laundry Service",
     lang_switch: "เปลี่ยนเป็นภาษาไทย 🇹🇭",
 
-    // --- Status Section ---
+    // --- Status ---
     status_pending: "Pending",
     status_processing: "Processing",
     status_ironing: "Ironing",
@@ -67,7 +76,7 @@ export const dictionary = {
     status_completed: "Completed",
     status_cancelled: "Cancelled",
 
-    // --- Tracking Result Section ---
+    // --- Result ---
     label_customer: "Customer",
     label_order_id: "Order ID",
     label_progress: "Progress",
@@ -75,7 +84,7 @@ export const dictionary = {
     label_back: "Back to Home",
     help_text: "For inquiries, please contact our staff.",
 
-    // --- Admin Section ---
+    // --- Admin: Table ---
     admin_active_title: "Active Jobs",
     admin_history_title: "Completed History",
     admin_header_id: "Customer ID",
@@ -88,6 +97,17 @@ export const dictionary = {
     admin_delete_success: "Deleted successfully",
     admin_delete_error: "Delete failed",
     admin_empty: "No orders found",
+
+    // ✅ เพิ่มใหม่: Admin Form
+    admin_dashboard_title: "Admin Dashboard",
+    admin_add_title: "Add New Order",
+    admin_add_placeholder_id: "Customer ID (e.g. 001)",
+    admin_add_placeholder_name: "Customer Name (Optional)",
+    admin_btn_add: "Add Order",
+    admin_btn_adding: "Adding...",
+    admin_add_success: "Order added successfully!",
+    admin_add_error: "Failed to add (ID might exist)",
+    admin_logout: "Logout"
   }
 };
 

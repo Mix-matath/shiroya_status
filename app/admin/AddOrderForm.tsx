@@ -1,160 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import { signOut } from "next-auth/react";
+import { useLanguage } from "@/app/LanguageContext"; // ✅ 1. เรียกใช้ Hook
 
-// ✅ 1. แก้ชื่อ Prop เป็น onOrderAdded
-export default function AddOrderForm({ onOrderAdded }: { onOrderAdded: () => void }) {
+export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useLanguage(); // ✅ 2. ดึงตัวแปรภาษามาใช้
+
   const [customerId, setCustomerId] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [customerName, setCustomerName] = useState(""); // เพิ่มช่องชื่อลูกค้า (Optional)
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!customerId.trim()) {
-      alert("Please enter slip No");
-      return;
-    }
+    if (!customerId) return;
 
     setLoading(true);
-
     try {
-      // ✅ 2. เปลี่ยน key ใน body ให้เป็น customerId (camelCase) ตาม Schema
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          customerId: customerId,
-          customerName: customerName // ส่งชื่อลูกค้าไปด้วย (ถ้ามี)
-        }),
+        body: JSON.stringify({ customerId, customerName }),
       });
 
-      if (res.status === 401) {
-        alert("Session time out please Sign in again");
-        await signOut({ callbackUrl: "/admin/login" });
-        return;
+      if (res.ok) {
+        setCustomerId("");
+        setCustomerName("");
+        onSuccess();
+        alert(t.admin_add_success); // ✅ ใช้คำแปล
+      } else {
+        alert(t.admin_add_error); // ✅ ใช้คำแปล
       }
-
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || "Can't add more orders");
-        return;
-      }
-
-      // Reset Form
-      setCustomerId("");
-      setCustomerName("");
-      
-      // ✅ 3. เรียกใช้ function ที่ส่งมาจากแม่
-      onOrderAdded();
-      
     } catch (error) {
       console.error(error);
-      alert("A connection error");
+      alert("Error connecting to server");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleAdd} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1">
-          Slip No. <span className="text-red-500">*</span>
-        </label>
-        <input
-          value={customerId}
-          onChange={(e) => setCustomerId(e.target.value)}
-          placeholder="xxxxxx-xxxx"
-          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-        />
-      </div>
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
+      <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        ✨ {t.admin_add_title} {/* ✅ */}
+      </h2>
+      
+      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-end">
+        <div className="w-full md:w-1/3">
+          <input
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            placeholder={t.admin_add_placeholder_id} // ✅
+            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
+            required
+          />
+        </div>
+        
+        <div className="w-full md:w-1/3">
+          <input
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder={t.admin_add_placeholder_name} // ✅
+            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-600 mb-1">
-          customer name (Optional)
-        </label>
-        <input
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          placeholder="AA-0000"
-          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold py-2.5 rounded-lg shadow-md shadow-blue-500/20 transition-all transform active:scale-95 flex justify-center items-center gap-2"
-      >
-        {loading ? (
-          <span className="animate-pulse">Adding...</span>
-        ) : (
-          <>
-            <span>Add</span>
-          </>
-        )}
-      </button>
-    </form>
-  );
-}
-/*"use client";
-
-import { useState } from "react";
-import { signOut } from "next-auth/react";
-
-export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
-  const [customerId, setCustomerId] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleAdd = async () => {
-    if (!customerId.trim()) {
-      alert("กรุณากรอก Customer ID");
-      return;
-    }
-
-    setLoading(true);
-
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customer_id: customerId }),
-    });
-
-    setLoading(false);
-
-    if (res.status === 401) {
-      alert("Session หมดอายุ กรุณา login ใหม่");
-      await signOut({ callbackUrl: "/admin/login" });
-      return;
-    }
-
-    if (!res.ok) {
-      alert("ไม่สามารถเพิ่มงานได้");
-      return;
-    }
-
-    setCustomerId("");
-    onSuccess();
-  };
-
-  return (
-    <div className="mb-4 flex gap-2">
-      <input
-        value={customerId}
-        onChange={(e) => setCustomerId(e.target.value)}
-        placeholder="Customer ID"
-        className="border p-2 rounded w-64"
-      />
-
-      <button
-        onClick={handleAdd}
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 rounded"
-      >
-        {loading ? "กำลังเพิ่ม..." : "เพิ่มงาน"}
-      </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full md:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all disabled:bg-slate-300 whitespace-nowrap"
+        >
+          {loading ? t.admin_btn_adding : t.admin_btn_add} {/* ✅ */}
+        </button>
+      </form>
     </div>
   );
-}*/
+}
