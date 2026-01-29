@@ -77,7 +77,7 @@ export default function HomePage() {
         onClick={toggleLanguage}
         className="absolute top-6 right-6 px-4 py-2 bg-white/80 backdrop-blur-sm border border-blue-100 rounded-full text-sm font-medium text-blue-600 hover:bg-white shadow-sm transition-all flex items-center gap-2"
       >
-        {lang === 'th' ? '🇬🇧 EN' : '🇹🇭 TH'}
+        {lang === 'th' ? 'EN' : 'TH'}
       </button>
 
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-blue-100/50 border border-white p-8 md:p-10 transition-all hover:shadow-2xl hover:shadow-blue-200/50">

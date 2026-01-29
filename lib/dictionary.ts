@@ -3,12 +3,12 @@
 export const dictionary = {
   th: {
     title: "ตรวจสอบสถานะ",
-    subtitle: "กรอกรหัสลูกค้าเพื่อตรวจสอบสถานะพัสดุ",
-    placeholder: "รหัสลูกค้า (เช่น ORDER-123)",
+    subtitle: "กรอกรหัสลูกค้าเพื่อตรวจสอบสถานะเสื้อผ้า",
+    placeholder: "เลขใบเสร็จ (Slip No.)",
     button_check: "ตรวจสอบสถานะ",
     button_loading: "กำลังตรวจสอบ...",
     status_label: "สถานะปัจจุบัน",
-    error_empty: "กรุณากรอก Customer ID",
+    error_empty: "กรุณากรอก Slip No",
     error_not_found: "ไม่พบข้อมูลลูกค้า หรือ รหัสไม่ถูกต้อง",
     error_connect: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
     footer: "© Shiroya Laundry Service",
