@@ -2,6 +2,7 @@
 
 export const dictionary = {
   th: {
+    // --- ส่วนหน้าแรก (Home) ---
     title: "ตรวจสอบสถานะ",
     subtitle: "กรอกรหัสลูกค้าเพื่อตรวจสอบสถานะเสื้อผ้า",
     placeholder: "เลขใบเสร็จ (Slip No.)",
@@ -13,24 +14,39 @@ export const dictionary = {
     error_connect: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
     footer: "© Shiroya Laundry Service",
     lang_switch: "Switch to English 🇬🇧",
-    
-    // ✅ คำแปลสถานะ (ต้องมีส่วนนี้)
+
+    // --- ส่วนสถานะ (Status) ---
     status_pending: "รอรับผ้า",
     status_processing: "กำลังซัก",
     status_ironing: "กำลังรีด",
     status_delivery: "กำลังส่ง",
     status_completed: "เสร็จสิ้น",
     status_cancelled: "ยกเลิก",
-    
-    // ส่วนอื่นๆ
+
+    // --- ส่วนหน้าผลลัพธ์ (Tracking Result) ---
     label_customer: "ลูกค้า",
     label_order_id: "Order ID",
     label_progress: "ความคืบหน้า",
     label_last_update: "อัปเดตล่าสุด",
     label_back: "กลับหน้าหลัก",
-    help_text: "หากมีข้อสงสัย โปรดติดต่อพนักงานที่หน้าร้าน"
+    help_text: "หากมีข้อสงสัย โปรดติดต่อพนักงานที่หน้าร้าน",
+
+    // --- ส่วนหน้า Admin ---
+    admin_active_title: "งานที่กำลังดำเนินการ",
+    admin_history_title: "ประวัติงานที่เสร็จสิ้น",
+    admin_header_id: "รหัสลูกค้า",
+    admin_header_name: "ชื่อลูกค้า",
+    admin_header_status: "สถานะ",
+    admin_header_date: "วันที่",
+    admin_header_action: "จัดการ",
+    admin_btn_delete: "ลบ",
+    admin_confirm_delete: "⚠️ คุณแน่ใจหรือไม่ที่จะลบออเดอร์นี้?\n(การกระทำนี้ไม่สามารถย้อนกลับได้)",
+    admin_delete_success: "ลบเรียบร้อย",
+    admin_delete_error: "ลบไม่สำเร็จ",
+    admin_empty: "ไม่พบรายการ",
   },
   en: {
+    // --- Home Section ---
     title: "Check Status",
     subtitle: "Enter customer ID to track your order",
     placeholder: "Customer ID (e.g. ORDER-123)",
@@ -43,7 +59,7 @@ export const dictionary = {
     footer: "© Shiroya Laundry Service",
     lang_switch: "เปลี่ยนเป็นภาษาไทย 🇹🇭",
 
-    // ✅ คำแปลสถานะ (ต้องมีส่วนนี้)
+    // --- Status Section ---
     status_pending: "Pending",
     status_processing: "Processing",
     status_ironing: "Ironing",
@@ -51,13 +67,27 @@ export const dictionary = {
     status_completed: "Completed",
     status_cancelled: "Cancelled",
 
-    // ส่วนอื่นๆ
+    // --- Tracking Result Section ---
     label_customer: "Customer",
     label_order_id: "Order ID",
     label_progress: "Progress",
     label_last_update: "Last Updated",
     label_back: "Back to Home",
-    help_text: "For inquiries, please contact our staff."
+    help_text: "For inquiries, please contact our staff.",
+
+    // --- Admin Section ---
+    admin_active_title: "Active Jobs",
+    admin_history_title: "Completed History",
+    admin_header_id: "Customer ID",
+    admin_header_name: "Customer Name",
+    admin_header_status: "Status",
+    admin_header_date: "Date",
+    admin_header_action: "Action",
+    admin_btn_delete: "Delete",
+    admin_confirm_delete: "⚠️ Are you sure you want to delete this order?\n(This action cannot be undone)",
+    admin_delete_success: "Deleted successfully",
+    admin_delete_error: "Delete failed",
+    admin_empty: "No orders found",
   }
 };
 

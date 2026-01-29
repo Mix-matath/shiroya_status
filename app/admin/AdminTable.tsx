@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/app/LanguageContext"; // ✅ 1. เรียกใช้ Hook ภาษา
 
 export default function AdminTable({ refreshKey }: { refreshKey: number }) {
+  const { t, lang, toggleLanguage } = useLanguage(); // ✅ 2. ดึงตัวแปรภาษามาใช้
+
   type Order = {
     id: string;
     customerId: string;
@@ -30,7 +33,6 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
     fetchOrders();
   }, [refreshKey]);
 
-  // ฟังก์ชันเปลี่ยนสถานะ
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
@@ -55,29 +57,27 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
     }
   };
 
-  // ✅ ฟังก์ชันลบออเดอร์
+  // ✅ ฟังก์ชันลบออเดอร์ (รองรับ 2 ภาษา)
   const handleDelete = async (orderId: string) => {
-    // 1. Popup ถามยืนยัน
-    const confirmDelete = window.confirm("⚠️ คุณแน่ใจหรือไม่ที่จะลบออเดอร์นี้?\n(การกระทำนี้ไม่สามารถย้อนกลับได้)");
+    // ใช้ t.admin_confirm_delete เพื่อแสดงข้อความตามภาษาที่เลือก
+    const confirmDelete = window.confirm(t.admin_confirm_delete);
     
     if (!confirmDelete) return;
 
     try {
-      // 2. ส่งคำสั่งลบไปที่ Server
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
-        // 3. ลบออกจากหน้าจอทันที
         setOrders((prev) => prev.filter((o) => o.id !== orderId));
         router.refresh();
       } else {
-        alert("❌ ลบไม่สำเร็จ");
+        alert(t.admin_delete_error);
       }
     } catch (error) {
       console.error(error);
-      alert("❌ เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      alert("❌ Error");
     }
   };
 
@@ -90,11 +90,9 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
     }
   };
 
-  // ✅ แยกออเดอร์เป็น 2 กลุ่ม
   const activeOrders = orders.filter(o => o.status !== "Completed");
   const completedOrders = orders.filter(o => o.status === "Completed");
 
-  // ฟังก์ชันสร้างตาราง (จะได้ไม่ต้องเขียนโค้ดซ้ำ 2 รอบ)
   const renderTable = (data: Order[], title: string, isHistory: boolean) => (
     <div className="bg-white rounded-2xl shadow-xl shadow-blue-100/50 border border-white overflow-hidden mb-8">
       <div className="p-6 border-b border-slate-100 bg-slate-50/50">
@@ -110,11 +108,12 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
         <table className="min-w-full text-left text-sm whitespace-nowrap">
           <thead className="uppercase tracking-wider border-b border-slate-100 text-slate-500 bg-white">
             <tr>
-              <th className="px-6 py-4 font-semibold">Customer ID</th>
-              <th className="px-6 py-4 font-semibold">Name</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
-              <th className="px-6 py-4 font-semibold">Date</th>
-              <th className="px-6 py-4 font-semibold text-right">Action</th>
+              {/* ✅ ใช้ตัวแปรภาษาที่หัวตาราง */}
+              <th className="px-6 py-4 font-semibold">{t.admin_header_id}</th>
+              <th className="px-6 py-4 font-semibold">{t.admin_header_name}</th>
+              <th className="px-6 py-4 font-semibold">{t.admin_header_status}</th>
+              <th className="px-6 py-4 font-semibold">{t.admin_header_date}</th>
+              <th className="px-6 py-4 font-semibold text-right">{t.admin_header_action}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-600">
@@ -129,31 +128,30 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
                 </td>
                 
                 <td className="px-6 py-4">
+                  {/* ✅ ตัวเลือกใน Dropdown ก็เปลี่ยนภาษาด้วย */}
                   <select
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer border-none outline-none ring-1 ring-inset ring-black/5 ${getStatusColor(order.status)}`}
                   >
-                    <option value="Pending">🕒 รอรับผ้า</option>
-                    <option value="Processing">💦 กำลังซัก</option>
-                    <option value="Ironing">🔥 กำลังรีด</option>
-                    <option value="Delivery">🚚 กำลังส่ง</option>
-                    <option value="Completed">✅ เสร็จสิ้น</option>
-                    {/* ❌ ลบตัวเลือก "ยกเลิก" ออกแล้ว */}
+                    <option value="Pending">{t.status_pending}</option>
+                    <option value="Processing">{t.status_processing}</option>
+                    <option value="Ironing">{t.status_ironing}</option>
+                    <option value="Delivery">{t.status_delivery}</option>
+                    <option value="Completed">{t.status_completed}</option>
                   </select>
                 </td>
 
                 <td className="px-6 py-4 text-slate-400">
-                  {new Date(order.createdAt).toLocaleDateString("th-TH")}
+                  {new Date(order.createdAt).toLocaleDateString(lang === 'th' ? "th-TH" : "en-US")}
                 </td>
 
                 <td className="px-6 py-4 text-right">
                   <button
                     onClick={() => handleDelete(order.id)}
-                    className="text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1 rounded-full transition-all text-xs font-semibold border border-transparent hover:border-red-200"
-                    title="ลบออเดอร์นี้"
+                    className="text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1 rounded-full transition-all text-xs font-semibold border border-transparent hover:border-red-200 flex items-center gap-1 ml-auto"
                   >
-                    🗑️ ลบ
+                    🗑️ {t.admin_btn_delete}
                   </button>
                 </td>
               </tr>
@@ -161,7 +159,7 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
             {data.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
-                  ไม่พบรายการ
+                  {t.admin_empty}
                 </td>
               </tr>
             )}
@@ -172,12 +170,19 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
   );
 
   return (
-    <div className="space-y-8">
-      {/* ตารางที่ 1: งานที่กำลังทำ (Active) */}
-      {renderTable(activeOrders, "งานที่กำลังดำเนินการ", false)}
+    <div className="space-y-8 relative">
+       {/* 🌐 ปุ่มเปลี่ยนภาษาสำหรับ Admin (วางไว้มุมขวาบนของตาราง) */}
+       <div className="flex justify-end mb-4">
+        <button 
+            onClick={toggleLanguage}
+            className="px-4 py-2 bg-white border border-blue-100 rounded-full text-sm font-medium text-blue-600 hover:bg-blue-50 shadow-sm transition-all flex items-center gap-2"
+        >
+            {lang === 'th' ? '🇬🇧 English' : '🇹🇭 ภาษาไทย'}
+        </button>
+      </div>
 
-      {/* ตารางที่ 2: งานที่เสร็จแล้ว (History) */}
-      {renderTable(completedOrders, "ประวัติงานที่เสร็จสิ้น", true)}
+      {renderTable(activeOrders, t.admin_active_title, false)}
+      {renderTable(completedOrders, t.admin_history_title, true)}
     </div>
   );
 }
