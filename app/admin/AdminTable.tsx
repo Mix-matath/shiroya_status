@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/app/LanguageContext"; // ✅ 1. เรียกใช้ Hook ภาษา
+import { useLanguage } from "@/app/LanguageContext"; // ✅ เรียกใช้ Hook ภาษา
 
 export default function AdminTable({ refreshKey }: { refreshKey: number }) {
-  const { t, lang, toggleLanguage } = useLanguage(); // ✅ 2. ดึงตัวแปรภาษามาใช้
+  const { t, lang } = useLanguage(); // ✅ ดึงตัวแปรภาษามาใช้
 
   type Order = {
     id: string;
@@ -57,9 +57,8 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
     }
   };
 
-  // ✅ ฟังก์ชันลบออเดอร์ (รองรับ 2 ภาษา)
+  // ✅ ฟังก์ชันลบออเดอร์ (ใช้ภาษาจาก Dictionary)
   const handleDelete = async (orderId: string) => {
-    // ใช้ t.admin_confirm_delete เพื่อแสดงข้อความตามภาษาที่เลือก
     const confirmDelete = window.confirm(t.admin_confirm_delete);
     
     if (!confirmDelete) return;
@@ -108,7 +107,6 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
         <table className="min-w-full text-left text-sm whitespace-nowrap">
           <thead className="uppercase tracking-wider border-b border-slate-100 text-slate-500 bg-white">
             <tr>
-              {/* ✅ ใช้ตัวแปรภาษาที่หัวตาราง */}
               <th className="px-6 py-4 font-semibold">{t.admin_header_id}</th>
               <th className="px-6 py-4 font-semibold">{t.admin_header_name}</th>
               <th className="px-6 py-4 font-semibold">{t.admin_header_status}</th>
@@ -128,7 +126,6 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
                 </td>
                 
                 <td className="px-6 py-4">
-                  {/* ✅ ตัวเลือกใน Dropdown ก็เปลี่ยนภาษาด้วย */}
                   <select
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
@@ -170,17 +167,7 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
   );
 
   return (
-    <div className="space-y-8 relative">
-       {/* 🌐 ปุ่มเปลี่ยนภาษาสำหรับ Admin (วางไว้มุมขวาบนของตาราง) */}
-       <div className="flex justify-end mb-4">
-        <button 
-            onClick={toggleLanguage}
-            className="px-4 py-2 bg-white border border-blue-100 rounded-full text-sm font-medium text-blue-600 hover:bg-blue-50 shadow-sm transition-all flex items-center gap-2"
-        >
-            {lang === 'th' ? '🇬🇧 English' : '🇹🇭 ภาษาไทย'}
-        </button>
-      </div>
-
+    <div className="space-y-8">
       {renderTable(activeOrders, t.admin_active_title, false)}
       {renderTable(completedOrders, t.admin_history_title, true)}
     </div>

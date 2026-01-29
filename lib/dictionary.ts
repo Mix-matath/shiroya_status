@@ -1,6 +1,8 @@
+// lib/dictionary.ts
+
 export const dictionary = {
   th: {
-    // --- หน้าแรก ---
+    // --- หน้าแรก (Home) ---
     title: "ตรวจสอบสถานะ",
     subtitle: "กรอกรหัสลูกค้าเพื่อตรวจสอบสถานะเสื้อผ้า",
     placeholder: "เลขใบเสร็จ (Slip No.)",
@@ -21,7 +23,7 @@ export const dictionary = {
     status_completed: "เสร็จสิ้น",
     status_cancelled: "ยกเลิก",
 
-    // --- ผลลัพธ์ ---
+    // --- หน้าผลลัพธ์ (Tracking Result) ---
     label_customer: "ลูกค้า",
     label_order_id: "Order ID",
     label_progress: "ความคืบหน้า",
@@ -29,7 +31,7 @@ export const dictionary = {
     label_back: "กลับหน้าหลัก",
     help_text: "หากมีข้อสงสัย โปรดติดต่อพนักงานที่หน้าร้าน",
 
-    // --- Admin: ตาราง ---
+    // --- Admin: ตารางและปุ่มลบ ---
     admin_active_title: "งานที่กำลังดำเนินการ",
     admin_history_title: "ประวัติงานที่เสร็จสิ้น",
     admin_header_id: "รหัสลูกค้า",
@@ -43,7 +45,7 @@ export const dictionary = {
     admin_delete_error: "ลบไม่สำเร็จ",
     admin_empty: "ไม่พบรายการ",
     
-    // ✅ เพิ่มใหม่: Admin ฟอร์มเพิ่มออเดอร์
+    // ✅ เพิ่มส่วนนี้ให้ครบ (เพื่อให้ Build ผ่าน)
     admin_dashboard_title: "แดชบอร์ดผู้ดูแลระบบ",
     admin_add_title: "เพิ่มออเดอร์ใหม่",
     admin_add_placeholder_id: "รหัสลูกค้า (เช่น 001)",
@@ -98,7 +100,7 @@ export const dictionary = {
     admin_delete_error: "Delete failed",
     admin_empty: "No orders found",
 
-    // ✅ เพิ่มใหม่: Admin Form
+    // ✅ เพิ่มส่วนนี้ให้ครบ (เพื่อให้ Build ผ่าน)
     admin_dashboard_title: "Admin Dashboard",
     admin_add_title: "Add New Order",
     admin_add_placeholder_id: "Customer ID (e.g. 001)",
