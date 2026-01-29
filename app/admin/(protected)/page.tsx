@@ -1,10 +1,10 @@
-"use client"; // ต้องเป็น Client Component เพื่อใช้ Context ภาษา
+"use client"; // ✅ ใช้ Client Component เพื่อให้เปลี่ยนภาษาได้
 
 import { useState } from "react";
-import { signOut } from "next-auth/react"; // ถ้าใช้ NextAuth
+import { signOut } from "next-auth/react";
 import AddOrderForm from "../AddOrderForm";
 import AdminTable from "../AdminTable";
-import { useLanguage } from "@/app/LanguageContext"; // ✅ เรียกใช้
+import { useLanguage } from "@/app/LanguageContext"; // ✅
 
 export default function AdminPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -18,11 +18,11 @@ export default function AdminPage() {
     <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
         
-        {/* Header ส่วนบนสุด: โลโก้ + ปุ่มเปลี่ยนภาษา + ปุ่ม Logout */}
+        {/* Header: โลโก้ + ปุ่มเปลี่ยนภาษา + Logout */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-              🛡️ {t.admin_dashboard_title} {/* ✅ */}
+              🛡️ {t.admin_dashboard_title}
             </h1>
             <p className="text-slate-500 text-sm">Shiroya Laundry Service</p>
           </div>
@@ -38,10 +38,10 @@ export default function AdminPage() {
 
             {/* ปุ่ม Logout */}
             <button
-              onClick={() => signOut()}
+              onClick={() => signOut({ callbackUrl: "/admin/login" })}
               className="px-4 py-2 bg-white border border-red-100 rounded-full text-sm font-medium text-red-500 hover:bg-red-50 shadow-sm transition-all"
             >
-              🚪 {t.admin_logout} {/* ✅ */}
+              🚪 {t.admin_logout}
             </button>
           </div>
         </div>

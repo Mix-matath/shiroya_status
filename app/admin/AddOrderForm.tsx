@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useLanguage } from "@/app/LanguageContext"; // ✅ 1. เรียกใช้ Hook
+import { useLanguage } from "@/app/LanguageContext"; // ✅ เรียกใช้ Hook
 
+// เปลี่ยนชื่อ Prop กลับเป็น onSuccess เพื่อให้เข้ากับไฟล์ page.tsx
 export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
-  const { t } = useLanguage(); // ✅ 2. ดึงตัวแปรภาษามาใช้
+  const { t } = useLanguage(); // ✅ ดึงตัวแปรภาษามาใช้
 
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -12,7 +13,7 @@ export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId) return;
+    if (!customerId.trim()) return;
 
     setLoading(true);
     try {
@@ -41,7 +42,7 @@ export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
       <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-        ✨ {t.admin_add_title} {/* ✅ */}
+        ✨ {t.admin_add_title}
       </h2>
       
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-end">
@@ -49,7 +50,7 @@ export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
           <input
             value={customerId}
             onChange={(e) => setCustomerId(e.target.value)}
-            placeholder={t.admin_add_placeholder_id} // ✅
+            placeholder={t.admin_add_placeholder_id}
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
             required
           />
@@ -59,7 +60,7 @@ export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
           <input
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            placeholder={t.admin_add_placeholder_name} // ✅
+            placeholder={t.admin_add_placeholder_name}
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
           />
         </div>
@@ -69,7 +70,7 @@ export default function AddOrderForm({ onSuccess }: { onSuccess: () => void }) {
           disabled={loading}
           className="w-full md:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-all disabled:bg-slate-300 whitespace-nowrap"
         >
-          {loading ? t.admin_btn_adding : t.admin_btn_add} {/* ✅ */}
+          {loading ? t.admin_btn_adding : t.admin_btn_add}
         </button>
       </form>
     </div>

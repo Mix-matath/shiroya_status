@@ -15,7 +15,7 @@ export const dictionary = {
     footer: "© Shiroya Laundry Service",
     lang_switch: "Switch to English 🇬🇧",
 
-    // --- สถานะ ---
+    // --- คำแปลสถานะ ---
     status_pending: "รอรับผ้า",
     status_processing: "กำลังซัก",
     status_ironing: "กำลังรีด",
@@ -45,7 +45,7 @@ export const dictionary = {
     admin_delete_error: "ลบไม่สำเร็จ",
     admin_empty: "ไม่พบรายการ",
     
-    // ✅ เพิ่มส่วนนี้ให้ครบ (เพื่อให้ Build ผ่าน)
+    // ✅ เพิ่มส่วนนี้ให้ครบ (สำคัญมาก)
     admin_dashboard_title: "แดชบอร์ดผู้ดูแลระบบ",
     admin_add_title: "เพิ่มออเดอร์ใหม่",
     admin_add_placeholder_id: "รหัสลูกค้า (เช่น 001)",
@@ -100,7 +100,7 @@ export const dictionary = {
     admin_delete_error: "Delete failed",
     admin_empty: "No orders found",
 
-    // ✅ เพิ่มส่วนนี้ให้ครบ (เพื่อให้ Build ผ่าน)
+    // ✅ เพิ่มส่วนนี้ให้ครบ (สำคัญมาก)
     admin_dashboard_title: "Admin Dashboard",
     admin_add_title: "Add New Order",
     admin_add_placeholder_id: "Customer ID (e.g. 001)",
