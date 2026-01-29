@@ -28,3 +28,27 @@ export async function PATCH(
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  // เช็คสิทธิ์ Admin ตรงนี้ถ้าต้องการ
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { id } = await params;
+
+    // ลบข้อมูลจาก Database
+    await prisma.order.delete({
+      where: { id: id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete Error:", error);
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+  }
+}
