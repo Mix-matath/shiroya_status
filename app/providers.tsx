@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { LanguageProvider } from "./LanguageContext";
 
 export default function Providers({
   children,
@@ -9,7 +10,9 @@ export default function Providers({
 }) {
   return (
     <SessionProvider>
+      <LanguageProvider> {/* ✅ ครอบ LanguageProvider ไว้ข้างใน */}
       {children}
+      </LanguageProvider>
     </SessionProvider>
   );
 }
