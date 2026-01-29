@@ -31,7 +31,7 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <Analytics /> {/* ✅ 2. เพิ่มบรรทัดนี้ (วางไว้ล่างสุดก่อนปิด Providers หรือ body) */}
+          {/*<Analytics />   ถ้าไม่อยากให้นับให้ comment ไว้*/}
         </Providers>
       </body>
     </html>
