@@ -15,7 +15,7 @@ export default async function AdminProtectedPage() {
   
   return (
     <div>
-       {/* ❌ ลบ initialOrders={orders} ออก ให้เหลือแค่นี้ 👇 */}
+       {/*  ลบ initialOrders={orders} ออก ให้เหลือแค่นี้ 👇 */}
        <AdminClient />
     </div>
   );
