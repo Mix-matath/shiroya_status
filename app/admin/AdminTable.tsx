@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/LanguageContext";
-// ต้องแน่ใจว่าสร้างไฟล์ QRScanner.tsx ไว้แล้วและนำเข้าให้ถูกต้อง
 import QRScanner from "./QRScanner";
+// ✅ 1. นำเข้าตัวสร้าง QR Code
+import { QRCodeCanvas } from "qrcode.react";
 
 export default function AdminTable({ refreshKey }: { refreshKey: number }) {
   const { t, lang, toggleLanguage } = useLanguage();
@@ -18,6 +19,8 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
   };
 
   const [orders, setOrders] = useState<Order[]>([]);
+  // ✅ 2. State สำหรับเปิด/ปิด Popup QR Code (เก็บค่า customerId ที่ถูกเลือก)
+  const [selectedQR, setSelectedQR] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchOrders = async () => {
@@ -80,9 +83,6 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
     }
   };
 
-  // ==========================================
-  // ✅ ส่วนของ QR Code Scanner (วางอยู่ข้างในฟังก์ชัน AdminTable)
-  // ==========================================
   const statusFlow = ["Pending", "Processing", "Ironing", "Delivery", "Completed"];
 
   const handleQRScanSuccess = async (scannedValue: string) => {
@@ -122,7 +122,6 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
 
       if (res.ok) {
         alert(`✅ เลื่อนสถานะเป็น "${nextStatus}" สำเร็จ!`);
-        
         setOrders((prev) =>
           prev.map((order) =>
             order.id === targetOrder.id ? { ...order, status: nextStatus } : order
@@ -137,7 +136,20 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
       alert("❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
     }
   };
-  // ==========================================
+
+  // ✅ 3. ฟังก์ชันดาวน์โหลดรูป QR Code
+  const downloadQRCode = () => {
+    const canvas = document.getElementById("qr-canvas") as HTMLCanvasElement;
+    if (canvas) {
+      const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = `QR_${selectedQR}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -197,12 +209,22 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
                   {new Date(order.createdAt).toLocaleDateString(lang === 'th' ? "th-TH" : "en-US")}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button
-                    onClick={() => handleDelete(order.id)}
-                    className="text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1 rounded-full transition-all text-xs font-semibold border border-transparent hover:border-red-200 flex items-center gap-1 ml-auto"
-                  >
-                    🗑️ {t.admin_btn_delete}
-                  </button>
+                  <div className="flex justify-end gap-2">
+                    {/* ✅ 4. ปุ่มเปิดดู QR Code */}
+                    <button
+                      onClick={() => setSelectedQR(order.customerId)}
+                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 px-3 py-1 rounded-full transition-all text-xs font-semibold border border-transparent hover:border-blue-200 flex items-center gap-1"
+                    >
+                      🔲 QR
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(order.id)}
+                      className="text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1 rounded-full transition-all text-xs font-semibold border border-transparent hover:border-red-200 flex items-center gap-1"
+                    >
+                      🗑️ {t.admin_btn_delete}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -230,11 +252,46 @@ export default function AdminTable({ refreshKey }: { refreshKey: number }) {
         </button>
       </div>
 
-      {/* ✅ เรียกใช้ QRScanner ตรงนี้ */}
       <QRScanner onScanSuccess={handleQRScanSuccess} />
 
       {renderTable(activeOrders, t.admin_active_title, false)}
       {renderTable(completedOrders, t.admin_history_title, true)}
+
+      {/* ✅ 5. หน้าต่าง Popup (Modal) สำหรับแสดงและโหลด QR Code */}
+      {selectedQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center relative animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">QR Code ถุงผ้า</h3>
+            <p className="text-slate-500 mb-6 text-sm">รหัสลูกค้า: <span className="font-bold text-slate-800">{selectedQR}</span></p>
+            
+            <div className="flex justify-center mb-6 bg-white p-4 rounded-xl border-2 border-slate-100 inline-block">
+              <QRCodeCanvas 
+                id="qr-canvas" 
+                value={selectedQR} 
+                size={200} 
+                level={"H"}
+                includeMargin={true}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setSelectedQR(null)}
+                className="flex-1 px-4 py-2 rounded-xl text-slate-600 font-semibold bg-slate-100 hover:bg-slate-200 transition-colors"
+              >
+                ปิด
+              </button>
+              <button
+                onClick={downloadQRCode}
+                className="flex-1 px-4 py-2 rounded-xl text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                💾 เซฟรูปภาพ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
