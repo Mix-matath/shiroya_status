@@ -1,64 +1,63 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// =======================
-// Prisma Generator
-// =======================
 generator client {
   provider = "prisma-client-js"
 }
 
-// =======================
-// Datasource (Prisma 7)
-// URL จะไปอยู่ใน prisma.config.ts
-// =======================
 datasource db {
   provider = "postgresql"
 }
 
+// ✅ 1. สร้าง Enum ล็อกค่าสถานะและสิทธิ
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum OrderStatus {
+  Pending
+  Processing
+  Ironing
+  Delivery
+  Completed
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
 // =======================
 // USER (ADMIN / STAFF)
-// ใช้กับ NextAuth
 // =======================
 model User {
   id       String @id @default(cuid())
   username String @unique
   password String
 
-  role String @default("ADMIN") // 🔑 แยกสิทธิภายหลังได้
+  role Role @default(ADMIN) // ✅ เปลี่ยนมาใช้ Enum
 
   sessions  Session[]
   adminLogs AdminLog[]
-  orderLogs     OrderStatusLog[]
+  orderLogs OrderStatusLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 // =======================
-// NEXTAUTH SESSION
+// NEXTAUTH SESSION & TOKEN
 // =======================
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// =======================
-// NEXTAUTH TOKEN
-// (ยังต้องมี แม้ใช้ Credentials)
-// =======================
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
-
   @@unique([identifier, token])
 }
 
@@ -66,37 +65,47 @@ model VerificationToken {
 // CUSTOMER ORDER / JOB
 // =======================
 model Order {
-  id           String  @id @default(cuid())
-  customerId   String  @unique // ลูกค้าใช้ติดตามงาน
+  id           String   @id @default(cuid())
+  customerId   String   @unique 
   customerName String?
-  status       String
+  phone        String?         // ✅ เพิ่มเบอร์โทร
+  status       OrderStatus @default(Pending) // ✅ เปลี่ยนมาใช้ Enum
+  price        Float?          // ✅ เพิ่มราคาสุทธิ
+  paymentStatus PaymentStatus @default(UNPAID) // ✅ สถานะการจ่ายเงิน
+  dueDate      DateTime?       // ✅ วันกำหนดส่งมอบ
   note         String?
+  isDeleted    Boolean  @default(false) // ✅ Soft Delete (ซ่อนออเดอร์แทนการลบทิ้งจริง)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   statusLogs OrderStatusLog[]
+
+  @@index([status]) // ✅ เพิ่ม Index ให้ค้นหาสถานะไวขึ้น
+  @@index([createdAt])
 }
 
-
+// =======================
+// LOGS
+// =======================
 model AdminLog {
   id        String   @id @default(cuid())
   adminId   String
   action    String
-  details   String?  // ✅ เพิ่มฟิลด์นี้ (เผื่อเก็บรายละเอียดเพิ่มเติม เช่น ลบออเดอร์ของใคร)
-  ipAddress String?  // ✅ เพิ่มฟิลด์นี้ (เผื่อเก็บ IP Address ป้องกันคนแฮ็กระบบ)
+  details   String?  
+  ipAddress String?  
   createdAt DateTime @default(now())
   user      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
 model OrderStatusLog {
   id        String   @id @default(cuid())
-  orderId   String
-  oldStatus String
+  orderId   String?  // ✅ เผื่อออเดอร์ถูกลบทิ้งจริงๆ (อนุญาตให้เป็น Null ได้)
+  oldStatus String   // (เก็บเป็น String ไว้ดีแล้ว เผื่ออนาคตเปลี่ยนชื่อ Enum ประวัติจะได้ไม่พัง)
   newStatus String
-  adminId   String
+  adminId   String?
   createdAt DateTime @default(now())
   
-  // ✅ เพิ่มความสัมพันธ์ให้เชื่อมกับตาราง Order (ถ้าลบออเดอร์ทิ้ง ประวัติการเปลี่ยนสถานะจะถูกลบตามไปด้วย)
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  // ✅ เปลี่ยนจาก Cascade เป็น SetNull ถ้าลบออเดอร์ทิ้ง ประวัติจะยังอยู่แค่กลายเป็นออเดอร์ Null
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user      User?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
 }
