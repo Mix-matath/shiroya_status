@@ -74,29 +74,29 @@ model Order {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  statusLogs OrderStatusLog[]
 }
+
 
 model AdminLog {
   id        String   @id @default(cuid())
   adminId   String
   action    String
+  details   String?  // ✅ เพิ่มฟิลด์นี้ (เผื่อเก็บรายละเอียดเพิ่มเติม เช่น ลบออเดอร์ของใคร)
+  ipAddress String?  // ✅ เพิ่มฟิลด์นี้ (เผื่อเก็บ IP Address ป้องกันคนแฮ็กระบบ)
   createdAt DateTime @default(now())
-
-  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
 model OrderStatusLog {
-  id          String   @id @default(cuid())
-
-  orderId     String
-  oldStatus   String
-  newStatus   String
-
-  adminId     String
-  admin       User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime @default(now())
-
-  @@index([orderId])
+  id        String   @id @default(cuid())
+  orderId   String
+  oldStatus String
+  newStatus String
+  adminId   String
+  createdAt DateTime @default(now())
+  
+  // ✅ เพิ่มความสัมพันธ์ให้เชื่อมกับตาราง Order (ถ้าลบออเดอร์ทิ้ง ประวัติการเปลี่ยนสถานะจะถูกลบตามไปด้วย)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
-

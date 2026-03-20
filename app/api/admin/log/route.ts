@@ -1,4 +1,4 @@
-// app/api/admin/log/route.ts
+/* app/api/admin/log/route.ts
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -24,4 +24,4 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ success: true });
-}
+}*/
