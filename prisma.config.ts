@@ -9,4 +9,7 @@ export default defineConfig({
     // @ts-ignore - ปิด error เนื่องจาก Type definition ของ Prisma 7 บางเวอร์ชันอาจยังไม่อัปเดต
     directUrl: process.env.DIRECT_URL!, 
   },
+  migrations: {
+    seed: 'npx ts-node --compiler-options {"module":"CommonJS"} prisma/seed.ts',
+  }
 } as any); // หรือ cast ทั้งหมดเป็น any เพื่อให้รองรับ property ใหม่ๆ
