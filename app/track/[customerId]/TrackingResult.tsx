@@ -75,7 +75,7 @@ export default function TrackingResult({ customerId }: { customerId: string }) {
     );
   }
 
-  // 🌟 กรณีไม่พบข้อมูล จะแสดงปุ่มกลับไปหน้าแรก (แก้ Path แล้ว)
+  // 🌟ไม่พบข้อมูล จะแสดงปุ่มกลับไปหน้าแรก (แก้ Path แล้ว)
   if (error || !data) {
     return (
       <div className="text-center p-8 bg-white rounded-2xl shadow-xl shadow-red-100/50 border border-red-50 max-w-md mx-auto mt-10">
