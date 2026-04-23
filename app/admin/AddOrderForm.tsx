@@ -2,19 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusCircle, Trash2 } from "lucide-react"; // แนะนำให้ใช้ Icon เพิ่มความสวยงาม (ถ้าไม่มีเดี๋ยวผมบอกวิธีลงให้ครับ)
+import { PlusCircle, Trash2 } from "lucide-react";
 
-export default function AddOrderForm() {
+export default function AddOrderForm({ onOrderAdded }: { onOrderAdded?: () => void }) {
   const router = useRouter();
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // 🌟 เพิ่ม State สำหรับเก็บรายการเสื้อผ้า (เริ่มด้วย 1 ช่องว่าง)
   const [items, setItems] = useState<string[]>([""]);
 
-  // ฟังก์ชันจัดการช่องรายการเสื้อผ้า
   const handleAddItem = () => setItems([...items, ""]);
   const handleRemoveItem = (index: number) => {
     const newItems = items.filter((_, i) => i !== index);
@@ -31,7 +29,6 @@ export default function AddOrderForm() {
     setLoading(true);
     setError("");
 
-    // กรองเอาเฉพาะช่องที่ถูกพิมพ์ (ไม่เอาช่องว่าง)
     const validItems = items.filter((item) => item.trim() !== "");
 
     if (validItems.length === 0) {
@@ -47,7 +44,7 @@ export default function AddOrderForm() {
         body: JSON.stringify({ 
           customerId, 
           customerName,
-          items: validItems // 🌟 ส่งรายการเสื้อผ้าไปด้วย
+          items: validItems 
         }),
       });
 
@@ -60,6 +57,12 @@ export default function AddOrderForm() {
       setCustomerId("");
       setCustomerName("");
       setItems([""]);
+      
+      // 🌟 เรียกใช้ onOrderAdded เพื่อแจ้งให้ Table รีเฟรชข้อมูล!
+      if (onOrderAdded) {
+        onOrderAdded();
+      }
+
       router.refresh();
 
     } catch (err: any) {
@@ -80,7 +83,6 @@ export default function AddOrderForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* แถวที่ 1: ข้อมูลลูกค้า */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -109,7 +111,6 @@ export default function AddOrderForm() {
           </div>
         </div>
 
-        {/* 🌟 แถวที่ 2: รายการเสื้อผ้า (ฟีเจอร์ใหม่) */}
         <div className="pt-2 border-t border-gray-100">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             รายการเสื้อผ้า *
