@@ -33,7 +33,7 @@ model User {
   username String @unique
   password String
 
-  role Role @default(ADMIN) // ✅ เปลี่ยนมาใช้ Enum
+  role Role @default(ADMIN) // ✅ ใช้ Enum
 
   sessions  Session[]
   adminLogs AdminLog[]
@@ -51,37 +51,49 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }
 
 // =======================
-// CUSTOMER ORDER / JOB
+// CUSTOMER ORDER (หัวบิล)
 // =======================
 model Order {
-  id           String   @id @default(cuid())
-  customerId   String   @unique 
+  id           String  @id @default(cuid())
+  customerId   String  @unique // ลูกค้าใช้ติดตามงาน เช่น GM-0001
   customerName String?
-  phone        String?         // ✅ เพิ่มเบอร์โทร
-  status       OrderStatus @default(Pending) // ✅ เปลี่ยนมาใช้ Enum
-  price        Float?          // ✅ เพิ่มราคาสุทธิ
-  paymentStatus PaymentStatus @default(UNPAID) // ✅ สถานะการจ่ายเงิน
-  dueDate      DateTime?       // ✅ วันกำหนดส่งมอบ
   note         String?
-  isDeleted    Boolean  @default(false) // ✅ Soft Delete (ซ่อนออเดอร์แทนการลบทิ้งจริง)
+
+  // 1 ออเดอร์ มีเสื้อผ้าได้หลายชิ้น
+  items OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// =======================
+// ORDER ITEM (รายการเสื้อผ้าแต่ละชิ้น)
+// =======================
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  itemName String // ชื่อเสื้อผ้า เช่น "เสื้อเชิ้ต", "กางเกง"
+  status   String @default("รอซัก") // สถานะของชิ้นนี้
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // ประวัติการเปลี่ยนสถานะของเสื้อผ้าชิ้นนี้
   statusLogs OrderStatusLog[]
 
-  @@index([status]) // ✅ เพิ่ม Index ให้ค้นหาสถานะไวขึ้น
-  @@index([createdAt])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // =======================
@@ -91,21 +103,29 @@ model AdminLog {
   id        String   @id @default(cuid())
   adminId   String
   action    String
-  details   String?  
-  ipAddress String?  
+  details   String?
+  ipAddress String?
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  // เปลี่ยนชื่อจาก user เป็น admin ให้สอดคล้องกับ adminId
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
+// ✅ รวม OrderStatusLog ให้เหลือตารางเดียว และผูกกับ OrderItem
 model OrderStatusLog {
-  id        String   @id @default(cuid())
-  orderId   String?  // ✅ เผื่อออเดอร์ถูกลบทิ้งจริงๆ (อนุญาตให้เป็น Null ได้)
-  oldStatus String   // (เก็บเป็น String ไว้ดีแล้ว เผื่ออนาคตเปลี่ยนชื่อ Enum ประวัติจะได้ไม่พัง)
-  newStatus String
-  adminId   String?
+  id String @id @default(cuid())
+
+  orderItemId String? // ✅ อนุญาตให้เป็น Null ได้เผื่อชิ้นงานถูกลบ
+  oldStatus   String // ✅ เก็บเป็น String ไว้กัน Enum พังในอนาคต ถูกต้องครับ
+  newStatus   String
+
+  adminId String? // ✅ อนุญาตให้เป็น Null ได้เผื่อแอดมินถูกลบออกจากระบบ
+
+  // ใช้ SetNull เพื่อให้ประวัติยังอยู่ แม้เสื้อผ้าหรือพนักงานจะถูกลบไปแล้ว
+  admin User?      @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  item  OrderItem? @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
-  
-  // ✅ เปลี่ยนจาก Cascade เป็น SetNull ถ้าลบออเดอร์ทิ้ง ประวัติจะยังอยู่แค่กลายเป็นออเดอร์ Null
-  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  user      User?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([orderItemId])
 }

@@ -2,16 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { Prisma } from "@prisma/client"; // 🌟 1. นำเข้า Type ของ Prisma เพิ่มเติม
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> } 
 ) {
   const session = await getServerSession(authOptions);
-  
-  // ตรวจสอบว่าล็อกอินอยู่หรือไม่ (ถ้ามี session.user.id ให้ดึงมาใช้ ถ้าไม่มีใช้ email หรือชื่อแทน)
-  const adminId = (session?.user as any)?.id || session?.user?.email || "Unknown Admin";
-
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -19,91 +16,37 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { customerName, note, items } = body;
 
-    // 1. ดึงข้อมูลออเดอร์เดิมมาเพื่อดูสถานะเก่าก่อนที่จะเปลี่ยน
-    const oldOrder = await prisma.order.findUnique({ where: { id: id } });
-    if (!oldOrder) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    // 🌟 2. ระบุ Type ให้ tx เป็น Prisma.TransactionClient
+    const updatedOrder = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // 1. อัปเดตข้อมูลหัวบิล
+      await tx.order.update({
+        where: { id },
+        data: { customerName, note },
+      });
 
-    // 2. ทำ 2 คำสั่งพร้อมกันด้วย $transaction (อัปเดตออเดอร์ + บันทึกลง OrderStatusLog)
-    const [updatedOrder] = await prisma.$transaction([
-      prisma.order.update({
-        where: { id: id },
-        data: { status: status },
-      }),
-      prisma.orderStatusLog.create({
-        data: {
-          orderId: id,
-          oldStatus: oldOrder.status,
-          newStatus: status,
-          adminId: adminId,
-        }
-      })
-    ]);
+      // 2. ถ้ามีการส่ง items มาด้วย (กรณีแก้ไขรายการเสื้อผ้า)
+      if (items && Array.isArray(items)) {
+        // ลบรายการเดิมออกก่อนเพื่อเขียนใหม่
+        await tx.orderItem.deleteMany({
+          where: { orderId: id },
+        });
 
-    return NextResponse.json(updatedOrder);
-  } catch (error) {
-    console.error("Update Error:", error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
-  }
-}
+        // สร้างรายการใหม่เข้าไป
+        await tx.orderItem.createMany({
+          data: items.map((item: any) => ({
+            orderId: id,
+            itemName: item.itemName,
+            status: item.status || "Pending",
+          })),
+        });
+      }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getServerSession(authOptions);
-  const adminId = (session?.user as any)?.id || session?.user?.email || "Unknown Admin";
-
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const { id } = await params;
-
-    // ทำ 2 คำสั่งพร้อมกัน (ลบออเดอร์ + บันทึกการกระทำลง AdminLog)
-    await prisma.$transaction([
-      prisma.order.delete({
-        where: { id: id },
-      }),
-      prisma.adminLog.create({
-        data: {
-          adminId: adminId,
-          action: `Deleted order with ID: ${id}`,
-        }
-      })
-    ]);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Delete Error:", error);
-    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
-  }
-}
-
-/*import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> } // ✅ แก้ Type เป็น Promise
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const { id } = await params; // ✅ await ก่อนใช้งาน
-    const body = await request.json();
-    const { status } = body;
-
-    const updatedOrder = await prisma.order.update({
-      where: { id: id },
-      data: { status: status },
+      return tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      });
     });
 
     return NextResponse.json(updatedOrder);
@@ -112,12 +55,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
+
+// ส่วนของฟังก์ชันลบออเดอร์
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
-  // เช็คสิทธิ์ Admin ตรงนี้ถ้าต้องการ
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -125,7 +69,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // ลบข้อมูลจาก Database
+    // ระบบจะลบ OrderItem ที่อยู่ข้างในให้โดยอัตโนมัติ (Cascade)
     await prisma.order.delete({
       where: { id: id },
     });
@@ -135,4 +79,4 @@ export async function DELETE(
     console.error("Delete Error:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
-}*/
+}

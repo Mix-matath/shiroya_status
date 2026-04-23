@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 /* =====================================================
-   GET : ดึงรายการ Order ทั้งหมด
+   GET : ดึงรายการ Order ทั้งหมด พร้อมเสื้อผ้าข้างใน
    ===================================================== */
 export async function GET() {
   try {
@@ -14,12 +14,8 @@ export async function GET() {
     }
 
     const orders = await prisma.order.findMany({
-      select: {
-        id: true,
-        customerId: true,
-        customerName: true, // ✅ ดึงชื่อลูกค้ามาแสดงด้วย
-        status: true,
-        createdAt: true,
+      include: {
+        items: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -29,15 +25,12 @@ export async function GET() {
     return NextResponse.json(orders);
   } catch (error) {
     console.error("GET /api/orders error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 /* =====================================================
-   POST : สร้าง Order ใหม่
+   POST : สร้าง Order ใหม่ หรือ **เพิ่มรายการในออเดอร์เดิม**
    ===================================================== */
 export async function POST(req: Request) {
   try {
@@ -46,36 +39,52 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ✅ 1. เปลี่ยนจาก customer_id เป็น customerId และรับ customerName มาด้วย
-    const { customerId, customerName } = await req.json();
+    const { customerId, customerName, items } = await req.json();
 
     if (!customerId) {
-      return NextResponse.json(
-        { error: "customer_id is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "customer_id is required" }, { status: 400 });
     }
 
-    const order = await prisma.order.create({
-      data: {
-        customerId: customerId,     // ✅ ใช้ตัวแปร customerId
-        customerName: customerName, // ✅ บันทึกชื่อลูกค้า
-        status: "Pending",          // ✅ แนะนำให้ใช้ "Pending" เพื่อให้ตรงกับ Logic ใน AdminTable และ TrackPage
+    // จัดเตรียมข้อมูลเสื้อผ้า (กรองช่องว่างทิ้ง และตั้งสถานะเป็น Pending)
+    const validItems = items && items.length > 0 
+      ? items
+          .filter((name: string) => name.trim() !== "")
+          .map((name: string) => ({ itemName: name, status: "Pending" }))
+      : [];
+
+    // 🌟 ใช้เทคนิค upsert: มีอยู่แล้ว = อัปเดตเพิ่มของ, ยังไม่มี = สร้างใหม่
+    const order = await prisma.order.upsert({
+      where: {
+        customerId: customerId,
       },
+      update: {
+        // หากลูกค้าเดิมมาใช้บริการ และพนักงานพิมพ์ชื่อใหม่ ก็ให้อัปเดตชื่อด้วย
+        ...(customerName ? { customerName: customerName } : {}),
+        
+        // ✨ สร้างเสื้อผ้าชิ้นใหม่ แล้วนำไปเชื่อมกับบิลเดิมโดยอัตโนมัติ
+        items: {
+          create: validItems,
+        },
+      },
+      create: {
+        customerId: customerId,
+        customerName: customerName,
+        items: {
+          create: validItems,
+        },
+      },
+      include: { items: true },
     });
 
     return NextResponse.json({ success: true, order });
   } catch (error) {
     console.error("POST /api/orders error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 /* =====================================================
-   PUT : อัปเดตสถานะ Order
+   PUT : อัปเดตสถานะ "เสื้อผ้าแต่ละชิ้น" (OrderItem)
    ===================================================== */
 export async function PUT(req: Request) {
   try {
@@ -84,31 +93,31 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, status } = await req.json();
+    const { itemId, status } = await req.json();
 
-    if (!id || !status) {
+    if (!itemId || !status) {
       return NextResponse.json({ error: "ข้อมูลไม่ครบ" }, { status: 400 });
     }
 
-    const order = await prisma.order.findUnique({
-      where: { id },
+    const orderItem = await prisma.orderItem.findUnique({
+      where: { id: itemId },
       select: { status: true },
     });
 
-    if (!order) {
-      return NextResponse.json({ error: "ไม่พบ Order" }, { status: 404 });
+    if (!orderItem) {
+      return NextResponse.json({ error: "ไม่พบข้อมูลชิ้นงาน" }, { status: 404 });
     }
 
-    const oldStatus = order.status;
+    const oldStatus = orderItem.status;
 
-    await prisma.order.update({
-      where: { id },
+    await prisma.orderItem.update({
+      where: { id: itemId },
       data: { status },
     });
 
     await prisma.orderStatusLog.create({
       data: {
-        orderId: id,
+        orderItemId: itemId,
         oldStatus,
         newStatus: status,
         adminId: session.user.id,
@@ -118,9 +127,6 @@ export async function PUT(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("PUT /api/orders error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

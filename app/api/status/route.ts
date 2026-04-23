@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    // 1. รับค่า customerId จากหน้าบ้าน
     const body = await request.json();
     const { customerId } = body;
 
@@ -11,23 +10,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "กรุณาระบุรหัสลูกค้า" }, { status: 400 });
     }
 
-    // 2. ค้นหาใน Database
+    // ✅ ค้นหา Order พร้อมดึงรายการเสื้อผ้า (items) ออกมาด้วย
     const order = await prisma.order.findUnique({
       where: {
         customerId: customerId,
       },
-      select: {
-        status: true,
-      },
+      include: {
+        items: {
+          select: {
+            id: true,
+            itemName: true,
+            status: true,
+          }
+        }
+      }
     });
 
-    // 3. ถ้าไม่เจอ
     if (!order) {
-      return NextResponse.json({ error: "ไม่พบข้อมูลลูกค้า" }, { status: 404 });
+      return NextResponse.json({ error: "ไม่พบข้อมูลลูกค้า หรือยังไม่มีออเดอร์นี้" }, { status: 404 });
     }
 
-    // 4. ถ้าเจอ ส่งสถานะกลับไป
-    return NextResponse.json({ status: order.status });
+    // ✅ ส่งรายการเสื้อผ้ากลับไปให้หน้าลูกค้า
+    return NextResponse.json({ 
+      customerId: order.customerId,
+      customerName: order.customerName,
+      items: order.items 
+    });
 
   } catch (error) {
     console.error("Check status error:", error);
